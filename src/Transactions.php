@@ -109,6 +109,49 @@ abstract class Transactions
 
 
     /**
+     * Allows you post a transaction on Monnify using customer card token.
+     *
+     * @param float $amount The amount to be paid by the customer
+     * @param string $customerName Full name of the customer
+     * @param string $customerEmail Email address of the customer
+     * @param string $paymentReference Merchant's Unique reference for the transaction.
+     * @param string $paymentDescription Description for the transaction. Will be returned as part of the account name on name enquiry for transfer payments.
+     * @param string $cardToken The card token to use for the payment.
+     * @param MonnifyIncomeSplitConfig $incomeSplitConfig
+     * @param string|null $currencyCode
+     * @return object
+     *
+     * @throws MonnifyFailedRequestException
+     * @link https://teamapt.atlassian.net/wiki/spaces/MON/pages/666501132/Charge+Card+Token
+     */
+    public function chargeCard(float $amount, string $customerName, string $customerEmail, string $paymentReference, string $paymentDescription, string $cardToken, MonnifyIncomeSplitConfig $incomeSplitConfig = null, string $currencyCode = null)
+    {
+        $endpoint = "{$this->monnify->baseUrl}{$this->monnify->v1}merchant/cards/charge-card-token";
+
+        $formData = [
+            "cardToken" => $cardToken,
+            "amount" => $amount,
+            "customerName" => trim($customerName),
+            "customerEmail" => $customerEmail,
+            "paymentReference" => $paymentReference,
+            "paymentDescription" => trim($paymentDescription),
+            "currencyCode" => $currencyCode ?? $this->config['default_currency_code'],
+            "contractCode" => $this->config['contract_code'],
+            "apiKey" => $this->config['api_key'],
+        ];
+        if ($incomeSplitConfig !== null)
+            $formData["incomeSplitConfig"] = $incomeSplitConfig->toArray();
+
+        $response = $this->monnify->withOAuth2()->post($endpoint, $formData);
+
+        $responseObject = json_decode($response->body());
+        if (!$response->successful())
+            throw new MonnifyFailedRequestException($responseObject->responseMessage ?? "Path '{$responseObject->path}' {$responseObject->error}", $responseObject->responseCode ?? $responseObject->status);
+
+        return $responseObject->responseBody;
+    }
+
+    /**
      * When Monnify sends transaction notifications, we add a transaction hash for security reasons. We expect you to try to recreate the transaction hash and only honor the notification if it matches.
      *
      * To calculate the hash value, concatenate the following parameters in the request body and generate a hash using the SHA512 algorithm:

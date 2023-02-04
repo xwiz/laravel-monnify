@@ -165,6 +165,19 @@ see example usage below:
                         "https://youdomain.com/afterpaymentendpoint", new MonnifyPaymentMethods(MonnifyPaymentMethod::CARD(), MonnifyPaymentMethod::ACCOUNT_TRANSFER()));
 
 ```
+You can now charge cards using the chargeToken method 
+
+## Card Token
+
+```php
+    //...
+    use HenryEjemuta\LaravelMonnify\Facades\Monnify;
+    //...
+
+    Monnify::Transactions()->chargeCard(
+                        15000, "Customer Name", "customer@example.com", "payment_ref", "Transaction Description",
+                        "MNFY_6A9DAD234B3E4E3C965B8F1D7BA8E0DE");
+
 
 Similar implementation applies to other sections (i.e. Banks, CustomerReservedAccounts, Disbursements, and SubAccounts)
 
